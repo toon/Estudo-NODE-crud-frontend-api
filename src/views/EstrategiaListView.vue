@@ -17,6 +17,59 @@
         ></v-divider>
         <v-spacer></v-spacer>
         <v-dialog
+          v-model="dialogParesmoeda"
+          max-width="500px"
+        >
+          <v-card>
+            <v-card-title>
+              <span class="text-h5">Pares de moeda</span>
+            </v-card-title>
+
+            <v-card-text>
+              <v-container>
+
+                <v-list select-strategy="classic">
+
+                  <v-list-item 
+                    v-for="parmoeda, index in paresmoeda"
+                    :key="index"
+                  >
+                    <template v-slot:prepend>
+
+                      <v-list-item-action start>
+                        <v-checkbox-btn v-model="parmoeda.checked"></v-checkbox-btn>
+                      </v-list-item-action>
+                    </template>
+
+                    <v-list-item-title>{{ parmoeda.name }}</v-list-item-title>
+
+                  </v-list-item>
+
+                </v-list>
+
+              </v-container>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                color="blue-darken-1"
+                variant="text"
+                @click="closeDialogParesmoeda"
+              >
+                Cancelar
+              </v-btn>
+              <v-btn
+                color="blue-darken-1"
+                variant="text"
+                @click="saveParMoeda"
+              >
+                Salvar
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog
           v-model="dialog"
           max-width="500px"
         >
@@ -115,6 +168,14 @@
       <v-icon
         class="me-2"
         size="small"
+        @click="editParesmoeda(item)"
+        title="Pares moeda"
+      >
+        mdi-currency-btc
+      </v-icon>
+      <v-icon
+        class="me-2"
+        size="small"
         @click="editItem(item)"
         title="Editar"
       >
@@ -147,6 +208,8 @@ import api from "../services/api";
 
 export default {
   data: () => ({
+    paresmoeda: [],
+    activeoperation: [],
     items: [],
     headers: [
       { title: "Cód", value: "id", key: "id" },
@@ -156,6 +219,7 @@ export default {
       { title: "Ações", value: "actions", align: "end", sortable: false },
     ],
     dialog: false,
+    dialogParesmoeda: false,
     dialogDelete: false,
     editedIndex: -1,
     editedItem: {
@@ -179,6 +243,9 @@ export default {
     dialogDelete (val) {
       val || this.closeDelete()
     },
+    dialogParesmoeda (val) {
+      val || this.closeDialogParesmoeda()
+    },
   },
 
   created() {
@@ -191,12 +258,53 @@ export default {
       api.get("/strategy").then((response) => {
         this.items = response.data;
       });
+      api.get("/parmoeda").then((response) => {
+        this.paresmoeda = response.data;
+        console.log(this.paresmoeda);
+      });      
     },
     
     editItem (item) {
       this.editedIndex = this.items.indexOf(item)
       this.editedItem = Object.assign({}, item)
       this.dialog = true
+    },
+
+    editParesmoeda(item) {
+      // Definir qual item está sendo editado
+      this.editedIndex = this.items.indexOf(item)
+      this.editedItem = Object.assign({}, item)
+      
+      // Recuperar da API os pares de moeda desta estratégia
+      api.get(`/activeoperation?StrategyId=${item.id}`).then((response) => {
+        
+        this.activeoperation = response.data;
+
+        // DEBUG
+        // console.log(this.activeoperation)
+
+        // Extrair os ParMoedaId da resposta da API
+        const markedPairs = this.activeoperation.map(item => item.ParMoedaId);
+
+        // forEach:
+        // - O método forEach é usado para iterar sobre cada item na lista paresmoeda. Ele executa a função fornecida uma vez para cada item na lista.
+
+        // parmoeda:
+        // - Em cada iteração, parmoeda é o objeto atual da lista paresmoeda sendo processado.
+
+        // markedPairs.includes(parmoeda.name):
+        // - markedPairs é uma lista de nomes de pares de moeda que devem estar marcados (obtida de uma API, por exemplo).
+        // - O método includes verifica se o nome do par de moeda atual (parmoeda.name) está presente na lista markedPairs. Retorna true se o nome estiver na lista e false caso contrário.
+
+        // Atualizar o estado de cada par de moeda com base nos ParMoedaId
+        this.paresmoeda.forEach(parmoeda => {
+          parmoeda.checked = markedPairs.includes(parmoeda.id);
+        });
+
+      });
+
+      // Mostrar a tela de diálogo
+      this.dialogParesmoeda = true
     },
 
     deleteItem (item) {
@@ -220,6 +328,10 @@ export default {
       })
     },
 
+    closeDialogParesmoeda () {
+      this.dialogParesmoeda = false
+    },
+
     closeDelete () {
       this.dialogDelete = false
       this.$nextTick(() => {
@@ -227,6 +339,34 @@ export default {
         this.editedIndex = -1
       })
     },
+
+    /**
+     * Função para salvar os pares de moeda associados à estratégia
+     */
+    saveParMoeda () {
+      // Filtrar apenas os pares de moeda que estão marcados (checked)
+      const markedPairs = this.paresmoeda.filter(parmoeda => parmoeda.checked);
+
+      // Criar o JSON para enviar para a API apenas com os pares marcados
+      const payload = markedPairs.map(parmoeda => ({
+        ParMoedaId: parmoeda.id, // Supondo que 'id' é o identificador do par de moeda
+        StrategyId: this.editedItem.id,
+        active: 'true'
+      }));
+
+      // Fazer a requisição para a API usando axios
+      api.post("/activeoperation", payload).then(() => {
+        // Carregar os itens novamente ou fazer outra ação após salvar
+        this.loadItems();
+      }).catch(error => {
+        // Tratamento de erro
+        console.error("Erro ao salvar os dados:", error);
+      });
+
+      // Fechar o diálogo ou card
+      this.closeDialogParesmoeda();
+    },
+
 
     save () {
       if (this.editedIndex > -1) {
@@ -238,7 +378,7 @@ export default {
           this.loadItems()
         )
       }
-      this.close()
+      this.closeDialogParesmoeda()
     },
   },
 }
