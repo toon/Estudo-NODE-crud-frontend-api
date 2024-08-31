@@ -18,9 +18,14 @@
 
     <v-navigation-drawer
       v-model="drawer"
-      temporary
+      permanent
     >
-      <!--  -->
+
+    <v-list nav>
+      <v-list-item prepend-icon="mdi-currency-btc" title="Pares de moeda" value="parmoedas" to="/parmoedas"></v-list-item>
+      <v-list-item prepend-icon="mdi-target-variant" title="Estrategias" value="estrategias" to="/estrategias"></v-list-item>
+    </v-list>    
+    
     </v-navigation-drawer>
 
     <v-main class="bg-grey-lighten-2">
@@ -39,6 +44,10 @@
 
 <script>
   export default {
-    data: () => ({ drawer: null }),
+    data: () => (
+      { 
+        drawer: null,
+      }
+    ),
   }
 </script>

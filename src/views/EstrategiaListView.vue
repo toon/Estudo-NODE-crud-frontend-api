@@ -9,7 +9,7 @@
       <v-toolbar
         flat
       >
-        <v-toolbar-title>Pares de moeda</v-toolbar-title>
+        <v-toolbar-title>Estratégias</v-toolbar-title>
         <v-divider
           class="mx-4"
           inset
@@ -48,6 +48,23 @@
                       label="Par moeda"
                     ></v-text-field>
                   </v-col>
+
+                  <v-col
+                    cols="12"
+                    md="12"
+                    sm="12"
+                  >
+                  
+                  <v-textarea 
+                    v-model="editedItem.description"  
+                    clearable 
+                    label="Descrição"
+
+                  >
+                  </v-textarea>
+                  
+                  </v-col>
+                  
                   <v-col
                     cols="12"
                     md="4"
@@ -133,7 +150,8 @@ export default {
     items: [],
     headers: [
       { title: "Cód", value: "id", key: "id" },
-      { title: "Par moeda", key:"name", value: "name" },
+      { title: "Estratégia", key:"name", value: "name" },
+      { title: "Descrição", key:"description", value: "description" },
       { title: "Status", key: "active", align: "center", value: "active" },
       { title: "Ações", value: "actions", align: "end", sortable: false },
     ],
@@ -170,7 +188,7 @@ export default {
   methods: {
 
     loadItems() {
-      api.get("/parmoeda").then((response) => {
+      api.get("/strategy").then((response) => {
         this.items = response.data;
       });
     },
@@ -188,7 +206,7 @@ export default {
     },
 
     deleteItemConfirm () {
-      api.delete(`/parmoeda/${this.editedItem.id}`).then(() => 
+      api.delete(`/strategy/${this.editedItem.id}`).then(() => 
         this.loadItems(),
         this.closeDelete()
       );
@@ -212,11 +230,11 @@ export default {
 
     save () {
       if (this.editedIndex > -1) {
-        api.put(`/parmoeda/${this.editedItem.id}`, this.editedItem).then(() => 
+        api.put(`/strategy/${this.editedItem.id}`, this.editedItem).then(() => 
           this.loadItems()
         )
       } else {
-        api.post("/parmoeda", this.editedItem).then(() => 
+        api.post("/strategy", this.editedItem).then(() => 
           this.loadItems()
         )
       }
