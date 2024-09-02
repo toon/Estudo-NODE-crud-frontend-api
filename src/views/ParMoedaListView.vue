@@ -3,7 +3,7 @@
   <v-data-table
     :headers="headers"
     :items="items"
-    :sort-by="[{ key: 'name', order: 'asc' }]"
+    :sort-by="[{ key: 'nome', order: 'asc' }]"
   >
     <template v-slot:top>
       <v-toolbar
@@ -44,7 +44,7 @@
                     sm="12"
                   >
                     <v-text-field
-                      v-model="editedItem.name"
+                      v-model="editedItem.nome"
                       label="Par moeda"
                     ></v-text-field>
                   </v-col>
@@ -54,7 +54,7 @@
                     sm="6"
                   >
                     <v-checkbox
-                      v-model="editedItem.active"
+                      v-model="editedItem.ativo"
                       label="Ativo?"
                     ></v-checkbox>
                   </v-col>
@@ -111,8 +111,8 @@
         mdi-delete
       </v-icon>
     </template>
-    <template v-slot:item.active="{ item }">
-      <v-icon v-if="item.active == true" color="success" title="Ativo">mdi-check-circle</v-icon>
+    <template v-slot:item.ativo="{ item }">
+      <v-icon v-if="item.ativo == true" color="success" title="Ativo">mdi-check-circle</v-icon>
       <v-icon v-else color="error" title="Inativo">mdi-close-circle</v-icon>
     </template>    
     <template v-slot:no-data>
@@ -133,18 +133,18 @@ export default {
     items: [],
     headers: [
       { title: "Cód", value: "id", key: "id" },
-      { title: "Par moeda", key:"name", value: "name" },
-      { title: "Status", key: "active", align: "center", value: "active" },
+      { title: "Par moeda", key:"nome", value: "nome" },
+      { title: "Status", key: "ativo", align: "center", value: "ativo" },
       { title: "Ações", value: "actions", align: "end", sortable: false },
     ],
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
     editedItem: {
-      name: ''
+      nome: ''
     },
     defaultItem: {
-      name: ''
+      nome: ''
     },
   }),
 
@@ -172,6 +172,7 @@ export default {
     loadItems() {
       api.get("/parmoeda").then((response) => {
         this.items = response.data;
+        console.log(this.items);
       });
     },
     

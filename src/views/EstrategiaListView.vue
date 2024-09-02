@@ -3,7 +3,7 @@
   <v-data-table
     :headers="headers"
     :items="items"
-    :sort-by="[{ key: 'name', order: 'asc' }]"
+    :sort-by="[{ key: 'nome', order: 'asc' }]"
   >
     <template v-slot:top>
       <v-toolbar
@@ -41,7 +41,7 @@
                       </v-list-item-action>
                     </template>
 
-                    <v-list-item-title>{{ parmoeda.name }}</v-list-item-title>
+                    <v-list-item-title>{{ parmoeda.nome }}</v-list-item-title>
 
                   </v-list-item>
 
@@ -97,7 +97,7 @@
                     sm="12"
                   >
                     <v-text-field
-                      v-model="editedItem.name"
+                      v-model="editedItem.nome"
                       label="Par moeda"
                     ></v-text-field>
                   </v-col>
@@ -109,7 +109,7 @@
                   >
                   
                   <v-textarea 
-                    v-model="editedItem.description"  
+                    v-model="editedItem.descricao"  
                     clearable 
                     label="Descrição"
 
@@ -124,7 +124,7 @@
                     sm="6"
                   >
                     <v-checkbox
-                      v-model="editedItem.active"
+                      v-model="editedItem.ativo"
                       label="Ativo?"
                     ></v-checkbox>
                   </v-col>
@@ -189,8 +189,8 @@
         mdi-delete
       </v-icon>
     </template>
-    <template v-slot:item.active="{ item }">
-      <v-icon v-if="item.active == true" color="success" title="Ativo">mdi-check-circle</v-icon>
+    <template v-slot:item.ativo="{ item }">
+      <v-icon v-if="item.ativo == true" color="success" title="Ativo">mdi-check-circle</v-icon>
       <v-icon v-else color="error" title="Inativo">mdi-close-circle</v-icon>
     </template>    
     <template v-slot:no-data>
@@ -213,9 +213,9 @@ export default {
     items: [],
     headers: [
       { title: "Cód", value: "id", key: "id" },
-      { title: "Estratégia", key:"name", value: "name" },
-      { title: "Descrição", key:"description", value: "description" },
-      { title: "Status", key: "active", align: "center", value: "active" },
+      { title: "Estratégia", key:"nome", value: "nome" },
+      { title: "Descrição", key:"descricao", value: "descricao" },
+      { title: "Status", key: "ativo", align: "center", value: "ativo" },
       { title: "Ações", value: "actions", align: "end", sortable: false },
     ],
     dialog: false,
@@ -223,10 +223,10 @@ export default {
     dialogDelete: false,
     editedIndex: -1,
     editedItem: {
-      name: ''
+      nome: ''
     },
     defaultItem: {
-      name: ''
+      nome: ''
     },
   }),
 
@@ -255,13 +255,13 @@ export default {
   methods: {
 
     loadItems() {
-      api.get("/strategy").then((response) => {
+      api.get("/estrategia").then((response) => {
         this.items = response.data;
       });
-      api.get("/parmoeda").then((response) => {
-        this.paresmoeda = response.data;
-        console.log(this.paresmoeda);
-      });      
+      // api.get("/parmoeda").then((response) => {
+      //   this.paresmoeda = response.data;
+      //   console.log(this.paresmoeda);
+      // });      
     },
     
     editItem (item) {
@@ -276,15 +276,17 @@ export default {
       this.editedItem = Object.assign({}, item)
       
       // Recuperar da API os pares de moeda desta estratégia
-      api.get(`/activeoperation?StrategyId=${item.id}`).then((response) => {
+      api.get(`/checkbox/Estrategia/${item.id}/ParMoeda/`).then((response) => {
         
-        this.activeoperation = response.data;
+        this.paresmoeda = response.data.allRelatedItems;
+        
+        const markedPairs = response.data.relatedItemIds;
 
         // DEBUG
         // console.log(this.activeoperation)
 
         // Extrair os ParMoedaId da resposta da API
-        const markedPairs = this.activeoperation.map(item => item.ParMoedaId);
+        // const markedPairs = relatedItemIds.map(item => item.ParMoedaId);
 
         // forEach:
         // - O método forEach é usado para iterar sobre cada item na lista paresmoeda. Ele executa a função fornecida uma vez para cada item na lista.
@@ -292,9 +294,9 @@ export default {
         // parmoeda:
         // - Em cada iteração, parmoeda é o objeto atual da lista paresmoeda sendo processado.
 
-        // markedPairs.includes(parmoeda.name):
+        // markedPairs.includes(parmoeda.nome):
         // - markedPairs é uma lista de nomes de pares de moeda que devem estar marcados (obtida de uma API, por exemplo).
-        // - O método includes verifica se o nome do par de moeda atual (parmoeda.name) está presente na lista markedPairs. Retorna true se o nome estiver na lista e false caso contrário.
+        // - O método includes verifica se o nome do par de moeda atual (parmoeda.nome) está presente na lista markedPairs. Retorna true se o nome estiver na lista e false caso contrário.
 
         // Atualizar o estado de cada par de moeda com base nos ParMoedaId
         this.paresmoeda.forEach(parmoeda => {
@@ -314,7 +316,7 @@ export default {
     },
 
     deleteItemConfirm () {
-      api.delete(`/strategy/${this.editedItem.id}`).then(() => 
+      api.delete(`/estrategia/${this.editedItem.id}`).then(() => 
         this.loadItems(),
         this.closeDelete()
       );
@@ -351,7 +353,7 @@ export default {
       const payload = markedPairs.map(parmoeda => ({
         ParMoedaId: parmoeda.id, // Supondo que 'id' é o identificador do par de moeda
         StrategyId: this.editedItem.id,
-        active: 'true'
+        ativo: 'true'
       }));
 
       // Fazer a requisição para a API usando axios
@@ -370,11 +372,11 @@ export default {
 
     save () {
       if (this.editedIndex > -1) {
-        api.put(`/strategy/${this.editedItem.id}`, this.editedItem).then(() => 
+        api.put(`/estrategia/${this.editedItem.id}`, this.editedItem).then(() => 
           this.loadItems()
         )
       } else {
-        api.post("/strategy", this.editedItem).then(() => 
+        api.post("/estrategia", this.editedItem).then(() => 
           this.loadItems()
         )
       }
