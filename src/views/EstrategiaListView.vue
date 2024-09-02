@@ -276,7 +276,7 @@ export default {
       this.editedItem = Object.assign({}, item)
       
       // Recuperar da API os pares de moeda desta estratégia
-      api.get(`/checkbox/Estrategia/${item.id}/ParMoeda/`).then((response) => {
+      api.get(`/getmanytomany/Estrategia/${item.id}/ParMoeda/`).then((response) => {
         
         this.paresmoeda = response.data.allRelatedItems;
         
@@ -346,18 +346,17 @@ export default {
      * Função para salvar os pares de moeda associados à estratégia
      */
     saveParMoeda () {
+      
       // Filtrar apenas os pares de moeda que estão marcados (checked)
       const markedPairs = this.paresmoeda.filter(parmoeda => parmoeda.checked);
 
-      // Criar o JSON para enviar para a API apenas com os pares marcados
-      const payload = markedPairs.map(parmoeda => ({
-        ParMoedaId: parmoeda.id, // Supondo que 'id' é o identificador do par de moeda
-        StrategyId: this.editedItem.id,
-        ativo: 'true'
-      }));
+      // Criar o JSON para enviar para a API apenas com os IDs dos pares marcados
+      const payload = {
+        relatedIds: markedPairs.map(parmoeda => parmoeda.id) // Supondo que 'id' é o identificador do par de moeda
+      };
 
       // Fazer a requisição para a API usando axios
-      api.post("/activeoperation", payload).then(() => {
+      api.put(`/putmanytomany/Estrategia/${this.editedItem.id}/ParMoeda`, payload).then(() => {
         // Carregar os itens novamente ou fazer outra ação após salvar
         this.loadItems();
       }).catch(error => {
@@ -369,7 +368,6 @@ export default {
       this.closeDialogParesmoeda();
     },
 
-
     save () {
       if (this.editedIndex > -1) {
         api.put(`/estrategia/${this.editedItem.id}`, this.editedItem).then(() => 
@@ -380,7 +378,7 @@ export default {
           this.loadItems()
         )
       }
-      this.closeDialogParesmoeda()
+      this.close()
     },
   },
 }
